@@ -1,46 +1,39 @@
 const $app = document.getElementById('app');
 const $observe = document.getElementById('observe');
-//const API = 'https://rickandmortyapi.com/api/character/';
-const API = 'https://randomuser.me/api/?results=20&seed=abc&page=';
+const API = 'https://us-central1-escuelajs-api.cloudfunctions.net/characters/';
 
-if(!localStorage.page){
-  localStorage.page = parseInt(1);
-}else{
-  localStorage.page = parseInt(1);
+var render = (resultados) => {
+  const characters = resultados.results;
+  let output = characters.map(character => {
+      return `
+    <article class="Card">
+      <img src="${character.image}" />
+    <h2>${character.name}<span>${character.location.name}</span></h2>
+    </article>
+  `
+  }).join('');
+  let newItem = document.createElement('section');
+  newItem.classList.add('Items');
+  newItem.innerHTML = output;
+  $app.appendChild(newItem);
+  localStorage.page = resultados.info.next;
 }
 
-const getData = api => {
-  //console.log(localStorage.page)
-  const urlApi = `${api}${localStorage.page}`
-  //console.log(urlApi)
-  fetch(urlApi)
-    .then(response => response.json())
-    .then(response => {
-      //console.log(response.results)
-      //console.log(response.info.next_fetch)
-      const characters = response.results;
-      //console.log(characters)
-      let output = characters.map(character => {
-        return `
-      <article class="Card">
-        <img src="${character.picture.large}" />
-      <h2>${character.name.first} ${character.name.last}<span>${character.location.city}</span></h2>
-      </article>
-    `
-      }).join('');
-      let newItem = document.createElement('section');
-      newItem.classList.add('Items');
-      newItem.innerHTML = output;
-      $app.appendChild(newItem);
-      localStorage.page = parseInt(localStorage.page) + 1;
-    })
-    .catch(error => console.log(error));
-}
+localStorage.page = API;
 
+async function getData(){
+  const urlApi = localStorage.page;
+  try{
+    let response = await fetch(urlApi)    
+    response = await response.json()
+    render(response)   
+  }catch(error){
+    intersectionObserver.disconnect()
+  }      
+}
 const loadData = () => {
-  getData(API);
+  getData();
 }
-
 const intersectionObserver = new IntersectionObserver(entries => {
   if (entries[0].isIntersecting) {
     loadData();
@@ -48,6 +41,5 @@ const intersectionObserver = new IntersectionObserver(entries => {
 }, {
   rootMargin: '0px 0px 100% 0px',
 });
-
 
 intersectionObserver.observe($observe);
